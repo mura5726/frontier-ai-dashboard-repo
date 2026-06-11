@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>フロンティアAI（ミュトス）脅威対策 対応ダッシュボード</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0a0e1a; --panel:#121829; --panel2:#1a2138; --line:#2a3354;
+  --txt:#e8edf7; --muted:#8b96b5; --accent:#3da9fc; --accent2:#7c5cff;
+  --s1:#ef4444; --s2:#f59e0b; --s3:#eab308; --s4:#84cc16; --s5:#22c55e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+  background:linear-gradient(160deg,#070b14,#0e1428);color:var(--txt);padding:24px;min-height:100vh}
+.wrap{max-width:1320px;margin:0 auto}
+header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+  border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:20px;flex-wrap:wrap}
+.title-block .eyebrow{color:var(--accent);font-size:12px;letter-spacing:2px;font-weight:700;text-transform:uppercase}
+.title-block h1{font-size:23px;font-weight:800;margin-top:4px;line-height:1.35}
+.title-block .sub{color:var(--muted);font-size:13px;margin-top:6px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(124,92,255,.15);
+  border:1px solid var(--accent2);color:#c9bdff;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px}
+.card h2{font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card h2::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--accent)}
+.card .cap{color:var(--muted);font-size:12px;margin-bottom:14px}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:6px}
+.scard{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;border-top:3px solid}
+.scard .num{position:absolute;top:10px;right:12px;font-size:11px;font-weight:800;color:var(--muted);letter-spacing:1px}
+.scard .dt{font-weight:800;font-size:14px}
+.scard .df{font-size:12px;font-weight:600;margin-top:2px}
+.scard .dd{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}
+.tab{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:11px 22px;
+  border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;transition:.18s}
+.tab:hover{border-color:var(--accent)}
+.tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+.tab.compare{margin-left:auto;background:transparent;border-style:dashed;font-weight:600}
+.tab.compare.active{background:var(--panel2);border-style:solid;border-color:var(--accent);color:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
+.kpi .label{color:var(--muted);font-size:12px;font-weight:600}
+.kpi .val{font-size:34px;font-weight:800;margin-top:6px;line-height:1}
+.kpi .val span{font-size:16px;color:var(--muted);font-weight:600}
+.kpi .note{font-size:11px;color:var(--muted);margin-top:8px}
+.kpi.k2::before{background:var(--accent2)} .kpi.k3::before{background:var(--s2)} .kpi.k4::before{background:var(--s5)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.chart-box{position:relative;height:360px}
+.chart-box.bar{height:420px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+tr.item-row{cursor:pointer;transition:.12s}
+tr.item-row:hover{background:var(--panel2)}
+.idx{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;
+  background:var(--panel2);border:1px solid var(--line);border-radius:7px;font-weight:700;font-size:12px;color:var(--accent)}
+.item-name{font-weight:600;max-width:380px}
+.tag{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
+.score-pill{display:inline-flex;width:30px;height:30px;align-items:center;justify-content:center;
+  border-radius:8px;font-weight:800;color:#0a0e1a}
+.owner{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;white-space:nowrap}
+.owner::before{content:"";width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:inline-block;flex:none}
+.click-hint{font-size:11px;color:var(--accent)}
+.detail{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:8px;display:none}
+.detail.show{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.detail h3{font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.detail .meta{display:flex;gap:24px;flex-wrap:wrap;font-size:12px;margin-bottom:16px;color:var(--muted)}
+.detail .meta b{color:var(--txt)}
+.detail .cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.detail h4{font-size:12px;color:var(--accent);margin-bottom:10px;letter-spacing:.5px}
+.detail ul{list-style:none}
+.detail .mli{display:flex;align-items:flex-start;gap:10px;font-size:13px;padding:7px 0;line-height:1.5;border-bottom:1px dashed var(--line)}
+.detail .mli:last-child{border-bottom:none}
+.detail .sli{font-size:13px;padding:7px 0 7px 18px;position:relative;line-height:1.5;border-bottom:1px dashed var(--line)}
+.detail .sli:last-child{border-bottom:none}
+.detail .sli::before{content:"▸";position:absolute;left:0;color:var(--accent2)}
+.st-chip{flex:none;font-size:10px;font-weight:800;padding:2px 8px;border-radius:5px;margin-top:1px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--muted)}
+.legend .lg{display:flex;align-items:center;gap:6px}
+.legend .sw{width:14px;height:14px;border-radius:4px}
+.track{display:flex;flex-direction:column;gap:9px}
+.tgroup-h{font-size:12px;font-weight:700;color:var(--muted);margin:16px 0 4px}
+.tgroup-h:first-child{margin-top:0}
+.trow{display:grid;grid-template-columns:34px 1fr 120px;gap:12px;align-items:center;
+  background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;transition:.12s}
+.trow:hover{border-color:var(--accent)}
+.trow .tname{font-size:13px;font-weight:600}
+.trow .tmeta{font-size:11px;color:var(--muted);margin-top:3px;display:flex;gap:14px;flex-wrap:wrap}
+.prog{height:7px;border-radius:4px;background:#0a0e1a;border:1px solid var(--line);overflow:hidden;margin-top:7px}
+.prog i{display:block;height:100%;border-radius:4px}
+footer{color:var(--muted);font-size:11px;text-align:center;margin-top:26px;line-height:1.7}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.steps{grid-template-columns:1fr 1fr}.detail .cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="title-block">
+      <div class="eyebrow">Frontier AI Threat Response · Scorecard</div>
+      <h1>フロンティアAI（ミュトス）脅威対策 対応ダッシュボード</h1>
+      <div class="sub">金融機関に求められる短期的緊急対応策の確立 — 大量の脆弱性への対応状況を「見える化」</div>
+    </div>
+    <div class="badge">● リスク可視化デモ / 経営〜現場 共通スコアカード</div>
+  </header>
+
+  <div class="card" style="margin-bottom:20px">
+    <h2>対応策の5ステップ</h2>
+    <div class="cap">短期緊急対応を5つのステップで推進。各対応策はこのいずれかのステップに対応します。</div>
+    <div class="steps" id="steps"></div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>対応成熟度レーダー</h2>
+      <div class="cap">9つの緊急対応策を5段階で評価（外側＝目標水準 Lv.5）</div>
+      <div class="chart-box"><canvas id="radar"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>項目別 対応段階（現状 vs 目標）</h2>
+      <div class="cap">各項目の到達段階。Lv.2以下は短期で要対応の重点領域</div>
+      <div class="chart-box bar"><canvas id="bar"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <h2>スコアカード（9つの短期緊急対応策）</h2>
+    <div class="cap">行をクリックすると、具体策・弊社支援領域・各タスクの<b>ステータス（完了／対応中／未着手）</b>を表示します</div>
+    <table>
+      <thead><tr><th>#</th><th>対応策</th><th>スコア</th><th>ステータス</th><th>期限</th><th>主担当</th><th></th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="legend">
+      <div class="lg"><span class="sw" style="background:var(--s1)"></span>1 未着手</div>
+      <div class="lg"><span class="sw" style="background:var(--s2)"></span>2 着手</div>
+      <div class="lg"><span class="sw" style="background:var(--s3)"></span>3 一部対応</div>
+      <div class="lg"><span class="sw" style="background:var(--s4)"></span>4 概ね対応</div>
+      <div class="lg"><span class="sw" style="background:var(--s5)"></span>5 完了/最適化</div>
+    </div>
+    <div class="detail" id="detail"></div>
+  </div>
+
+  <div class="card">
+    <h2>期限 × 進捗トラッカー</h2>
+    <div class="cap">対応期限が近い順に表示。バーは現状の達成度（段階÷5）。基準日：2026/06/11</div>
+    <div class="track" id="tracker"></div>
+  </div>
+
+  <footer>
+    フロンティアAI（ミュトス）脅威への短期的緊急対応 スコアカード（デモ）。<br>
+    ※掲載3社（A社／B社／C社）・スコアはデモ用サンプル。期限／主担当は添付Excelの値、タスク別ステータスは表示例です。
+  </footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
