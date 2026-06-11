@@ -56,11 +56,11 @@ const ITEMS=[
   support:['金融ISAC等との連携支援','規制対応・監査対応支援','エコシステム全体を含む危機対応体制構築支援']}
 ];
 
-// デモ用サンプル3社（社名はA/B/Cで差し替えやすく）
+// デモ用サンプル3件（A/B/Cで差し替えやすく）
 const COMPANIES=[
- {key:'a',name:'A社',color:'#3da9fc',scores:[5,5,4,4,4,4,4,3,5]},
- {key:'b',name:'B社',color:'#7c5cff',scores:[4,4,3,2,3,2,2,2,3]}, // ← 添付Excelの評価値
- {key:'c',name:'C社',color:'#22c55e',scores:[3,3,5,3,2,3,4,2,2]}
+ {key:'a',name:'A',color:'#3da9fc',scores:[5,5,4,4,4,4,4,3,5]},
+ {key:'b',name:'B',color:'#7c5cff',scores:[4,4,3,2,3,2,2,2,3]}, // ← 添付Excelの評価値
+ {key:'c',name:'C',color:'#22c55e',scores:[3,3,5,3,2,3,4,2,2]}
 ];
 const BASE='b';
 
@@ -98,6 +98,12 @@ function renderSteps(){
 
 function renderTabs(){
   const t=$('#tabs');t.innerHTML='';
+  // 全体比較タブを先頭に配置
+  const cmp=document.createElement('div');
+  cmp.className='tab compare'+(compare?' active':'');
+  cmp.textContent='全体比較';
+  cmp.onclick=()=>{compare=!compare;render();};
+  t.appendChild(cmp);
   COMPANIES.forEach(c=>{
     const d=document.createElement('div');
     d.className='tab'+(c.key===current&&!compare?' active':'');
@@ -105,11 +111,6 @@ function renderTabs(){
     d.onclick=()=>{current=c.key;compare=false;render();};
     t.appendChild(d);
   });
-  const cmp=document.createElement('div');
-  cmp.className='tab compare'+(compare?' active':'');
-  cmp.textContent='⊕ 全社比較';
-  cmp.onclick=()=>{compare=!compare;render();};
-  t.appendChild(cmp);
 }
 
 function renderKpis(){
@@ -205,7 +206,7 @@ function showDetail(id){
      +'<span>🏢 表示中：<b>'+who.name+'</b>（段階 '+refScore+'/5・'+STEP_LABEL[refScore]+'）</span>'
      +'<span>🗓 対応期限：<b>'+fmtDate(it.deadline)+'</b></span>'
      +'<span>👤 主担当：<b>'+it.owner+'</b></span>'
-     +'<span>3社：'+scores+'</span></div>'
+     +'<span>全体：'+scores+'</span></div>'
    +'<div class="cols">'
      +'<div><h4>■ 具体策（C列）／タスク別ステータス</h4><ul>'+measuresHtml+'</ul></div>'
      +'<div><h4>■ 弊社の対策支援可能領域（D列）</h4><ul>'+supportHtml+'</ul></div>'
@@ -239,7 +240,7 @@ function renderTracker(){
   });
   if(compare){
     const note=document.createElement('div');note.className='cap';note.style.marginTop='10px';
-    note.textContent='※ 比較モードでは B社 の進捗・期限を表示しています。';
+    note.textContent='※ 比較モードでは B の進捗・期限を表示しています。';
     w.appendChild(note);
   }
 }
